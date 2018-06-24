@@ -1,0 +1,17 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  user: MyString
+  seller_id: MyString
+  secret_key: MyString
+  aws_key: MyString
+  cw_api_token: MyString
+  cw_room_id: MyString
+
+two:
+  user: MyString
+  seller_id: MyString
+  secret_key: MyString
+  aws_key: MyString
+  cw_api_token: MyString
+  cw_room_id: MyString

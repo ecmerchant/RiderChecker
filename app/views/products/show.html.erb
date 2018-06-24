@@ -1,0 +1,47 @@
+<div class="page-header" id="banner">
+  <div class="row">
+    <div class="col-lg-10 col-md-10">
+      <h2>SKUの読込</h2>
+      <%= form_tag('/products/upload', method:'post', multipart: true) do %>
+        <div class="form-group">
+          <div class="form-inline" id="asin_form" >
+            <%= submit_tag '読込', class:'btn btn-primary' %>&nbsp;&nbsp;&nbsp;
+            <div class="form-group" style="width: 320px">
+              <%= file_field_tag :file %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+
+      <%= form_tag('/products/check', method:'get') do %>
+        <div class="form-group">
+          <%= submit_tag '監視開始', class:'btn btn-primary' %>
+        </div>
+      <% end %>
+
+      <table class="table table-striped table-hover table-bordered table-headerfixed ellipsis tablesorter" id="result_table">
+        <thead class="thead-inverse" style="font-size: 10pt;">
+          <tr>
+            <th width="35%">SKU</th>
+            <th width="25%">ASIN</th>
+            <th width="20%">価格</th>
+            <th width="20%">相乗り？</th>
+          </tr>
+        </thead>
+        <% if @products != nil then %>
+        <% counter = 0 %>
+        <tbody style="font-size: 10pt;">
+          <% for temp in @products %>
+          <tr>
+            <td width="35%"><%= temp.sku %></td>
+            <td width="25%"><%= temp.asin %></td>
+            <td width="20%"><%= temp.price %></td>
+            <td width="20%"><% if temp.riden == true then %>相乗りあり<% else %>問題なし<% end %></td>
+          </tr>
+          <% end %>
+        </tbody>
+        <% end %>
+      </table>
+    </div>
+  </div>
+</div>
