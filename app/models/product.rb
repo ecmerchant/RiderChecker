@@ -23,50 +23,87 @@ class Product < ApplicationRecord
     skulist.each do |tsku, i|
       skus.push(tsku)
       if j == 9 or i == skulist.length - 1 then
-        response = client.get_lowest_offer_listings_for_sku(skus,{exclude_me: "true"})
-        #response = client.get_lowest_offer_listings_for_sku(skus,{exclude_me: "false"})
+        skus.slice!(j,9-skus.length)
+        response = client.get_lowest_offer_listings_for_sku(skus,{exclude_me: "false"})
+        response2 = client.get_lowest_offer_listings_for_sku(skus,{exclude_me: "true"})
         parser = response.parse
-
+        parser2 = response2.parse
+        uhash = {}
         parser.each do |product|
           asin = product.dig('Product', 'Identifiers', 'MarketplaceASIN', 'ASIN')
           ttsku = product.dig('Product', 'Identifiers', 'SKUIdentifier', 'SellerSKU')
+          uhash[ttsku] = {asin: asin, sku: ttsku}
           buf = product.dig('Product', 'LowestOfferListings', 'LowestOfferListing')
-          #buf = product.dig('Product', 'LowestOfferListings')
-          lowestprice = 0
-          logger.debug("\n")
-          logger.debug(asin)
+          buf1 = product.dig('Product', 'LowestOfferListings')
           tnum = 0
-          k = 0
-          if buf != nil then
-            buf.each do |tp|
-              logger.debug(k)
-              logger.debug(tp)
-              if tp.include?('NumberOfOfferListingsConsidered') then
-                tnum = tnum + tp[1].to_i
-                logger.debug(tnum)
+          if buf1 != nil then
+            #出品アリ
+            if buf.class == Array then
+              #複数出品
+              ch1 = false
+              ch2 = false
+              buf.each do |ttt|
+                if ttt.dig('Qualifiers', 'FulfillmentChannel') == 'Amazon' then
+                  ch1 = true
+                elsif ttt.dig('Qualifiers', 'FulfillmentChannel') == 'Merchant' then
+                  ch2 = true
+                end
+                tnum = tnum + ttt.dig('NumberOfOfferListingsConsidered').to_i
               end
-              logger.debug("\n")
-              #logger.debug(tp)
-              #if tp.include?('NumberOfOfferListingsConsidered') then
-              #  tnum = tnum + tp.dig(1)[1].to_i
-              #end
-              k += 1
-            end
-            lowestprice = product.dig('Product', 'LowestOfferListings', 'LowestOfferListing', 0, 'Price', 'ListingPrice','Amount')
-            if lowestprice == nil then
-              lowestprice = 0
-            end
-          else
-            lowestprice = 0
-          end
-          logger.debug("Seller num : " + tnum.to_s)
-          logger.debug(ttsku)
-          if ttsku != nil then
-            if tnum > 0 then
-              tt.find_by(sku:ttsku).update(riden: true)
             else
-              tt.find_by(sku:ttsku).update(riden: false)
+              #tnum = buf.dig('NumberOfOfferListingsConsidered').to_i
             end
+          end
+          th = uhash[ttsku]
+          if ch1 == false || ch2 == false then
+            tnum = 0
+          end
+          th[:snum] = tnum
+          uhash[ttsku] = th
+        end
+
+        parser2.each do |product|
+          asin = product.dig('Product', 'Identifiers', 'MarketplaceASIN', 'ASIN')
+          ttsku = product.dig('Product', 'Identifiers', 'SKUIdentifier', 'SellerSKU')
+          buf = product.dig('Product', 'LowestOfferListings', 'LowestOfferListing')
+          buf1 = product.dig('Product', 'LowestOfferListings')
+          tnum = 0
+          if buf1 != nil then
+            #出品アリ
+            if buf.class == Array then
+              #複数出品
+              buf.each do |ttt|
+                if ttt.dig('Qualifiers', 'ItemCondition') == "New" then
+                  tnum = tnum + ttt.dig('NumberOfOfferListingsConsidered').to_i
+                end
+              end
+            else
+              if buf.dig('Qualifiers', 'ItemCondition') == "New" then
+                tnum = buf.dig('NumberOfOfferListingsConsidered').to_i
+              end
+            end
+          end
+          th = uhash[ttsku]
+          th[:rnum] = tnum
+          uhash[ttsku] = th
+        end
+
+        uhash.each do |ss|
+          logger.debug(ss[1])
+          t_sku = ss[1][:sku]
+          t_snum = ss[1][:snum]
+          t_rnum = ss[1][:rnum]
+          temps = tt.find_by(sku:t_sku)
+          if temps == nil then break end
+          if t_snum > 0 then
+            temps.update(jriden: true)
+          else
+            temps.update(jriden: false)
+          end
+          if t_rnum > 0 then
+            temps.update(riden: true)
+          else
+            temps.update(riden: false)
           end
         end
 
