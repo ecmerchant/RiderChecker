@@ -11,8 +11,11 @@ Rails.application.routes.draw do
 
   post 'products/upload'
 
+  post 'products/update'
+
   get 'products/check'
 
+  delete 'products/delete'
   mount Resque::Server.new, at: "/resque"
 
   devise_scope :user do

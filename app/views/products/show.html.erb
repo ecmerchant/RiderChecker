@@ -1,7 +1,7 @@
 <div class="page-header" id="banner">
   <div class="row">
     <div class="col-lg-10 col-md-10">
-      <h2>SKUの読込</h2>
+      <h2>ASINの読込 & 手動監視実行</h2>
       <%= form_tag('/products/upload', method:'post', multipart: true) do %>
         <div class="form-group">
           <div class="form-inline" id="asin_form" >
@@ -19,31 +19,62 @@
         </div>
       <% end %>
 
+      <%= form_tag('/products/update', method:'post') do %>
+      <div class="form-group">
+        <%= submit_tag '確認状況の更新', class:'btn btn-primary' %>
+      </div>
+
       <table class="table table-striped table-hover table-bordered table-headerfixed ellipsis tablesorter" id="result_table">
         <thead class="thead-inverse" style="font-size: 10pt;">
           <tr>
-            <th width="25%">SKU</th>
-            <th width="20%">ASIN</th>
-            <th width="15%">価格</th>
+            <th width="25%">ASIN</th>
+            <th width="20%">価格</th>
             <th width="20%">他社相乗り？</th>
             <th width="20%">自社相乗り？</th>
+            <th width="15%">確認済み</th>
           </tr>
         </thead>
         <% if @products != nil then %>
         <% counter = 0 %>
         <tbody style="font-size: 10pt;">
           <% for temp in @products %>
+          <% if temp.checked == true then checked = 'checked="checked"' else checked = "" end %>
           <tr>
-            <td width="25%"><%= temp.sku %></td>
-            <td width="20%"><a href="https://www.amazon.co.jp/dp/<%= temp.asin %>" target="blank"><%= temp.asin %></a></td>
-            <td width="15%"><%= temp.price %></td>
+            <td width="25%"><a href="https://www.amazon.co.jp/dp/<%= temp.asin %>" target="blank"><%= temp.asin %></a></td>
+            <td width="20%"><%= temp.price %></td>
             <td width="20%"><% if temp.riden == true then %>他社相乗りあり<% else %>問題なし<% end %></td>
             <td width="20%"><% if temp.jriden == true then %>自社相乗りあり<% else %>問題なし<% end %></td>
+            <td width="15%"><input type="checkbox" name="chk[<%= temp.asin %>]" value="<%= temp.checked %>" <%= checked %> id="chk_<%= temp.asin %>" style="margin-top: 5px;" /></td>
           </tr>
           <% end %>
         </tbody>
         <% end %>
       </table>
+      <% end %>
     </div>
   </div>
 </div>
+
+
+<script type="text/javascript">
+
+  $(document).ready(function()
+    {
+
+      $("#result_table").tablesorter();
+
+      $(function() {
+        $('[id^="chk"]').click(function(event){
+          event.stopPropagation();
+        });
+        $('[id^="chk"]').parent('td').click(function(event){
+          $(this).children('[id^="chk"]').trigger('click');
+        });
+        $('label[for^="chk"]').click(function(event) {
+          event.preventDefault();
+        });
+      });
+
+    }
+  );
+</script>

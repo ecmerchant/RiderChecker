@@ -11,11 +11,11 @@
           </div>
           <div class="form-group">
             <%= f.label :aws_key, "AWSキー" %>
-            <%= f.text_field :aws_key, class: 'form-control'  %>
+            <%= f.text_field :aws_key, class: 'form-control' %>
           </div>
           <div class="form-group">
             <%= f.label :secret_key, "秘密キー" %>
-            <%= f.text_field :secret_key, class: 'form-control'  %>
+            <%= f.text_field :secret_key, class: 'form-control' %>
           </div>
           <br>
           <p class="lead">チャットワーク連携設定</p>
@@ -25,13 +25,19 @@
           </div>
           <div class="form-group">
             <%= f.label :cw_room_id, "ルームID" %>
-            <%= f.text_field :cw_room_id, class: 'form-control'  %>
+            <%= f.text_field :cw_room_id, class: 'form-control' %>
+          </div>
+          <div class="form-group">
+            <%= f.label :cw_ids, "担当者ID" %>
+            <%= f.text_field :cw_ids, class: 'form-control' %>
           </div>
           <div class="actions">
             <%= f.submit "設定する", {id: "setup_btn", onClick: 'alert("更新しました")'} %>
           </div>
-
         <% end %>
+        <br>
+        <br>
+        <%= link_to 'ASIN全削除', '/products/delete', method: :delete, data: { confirm: '本当に削除してよろしいですか？' }, class:'btn btn-danger' %>
       </div>
     </div>
   </div>
