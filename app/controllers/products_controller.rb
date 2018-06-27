@@ -27,8 +27,9 @@ class ProductsController < ApplicationController
 
   def check
     if params[:commit] == "監視開始" then
-      temp = Product.new
-      temp.crawl(current_user.email)
+      #temp = Product.new
+      #temp.crawl(current_user.email)
+      RiderCheckJob.perform_later(current_user.email)
     end
     redirect_to products_show_path
   end
