@@ -14,7 +14,7 @@ class Product < ApplicationRecord
     roomid = temp.cw_room_id
     ids = temp.cw_ids
 
-    tt = Product.where(user: user).group(:asin)
+    tt = Product.where(user: user)
 
     asinlist = tt.pluck(:asin)
     client = MWS.products(
@@ -126,7 +126,7 @@ class Product < ApplicationRecord
           if t_snum > 0 || t_rnum > 0 then
             if temps.checked != true then
               stask(msg, apitoken,roomid, ids)
-            end 
+            end
           end
         end
 
