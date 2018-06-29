@@ -58,8 +58,7 @@ class ProductsController < ApplicationController
 
   def report
     user = current_user.email
-    temp = Product.new
-    temp.fba_check(user)
+    GetReportJob.perform_later(user)
     redirect_to products_show_path
   end
 
