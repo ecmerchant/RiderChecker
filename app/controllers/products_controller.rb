@@ -77,6 +77,12 @@ class ProductsController < ApplicationController
     redirect_to products_show_path
   end
 
+  def reset
+    temp = Product.where(user:current_user.email)
+    temp.update(checked: false)
+    redirect_to products_show_path
+  end
+
   private
   def user_params
      params.require(:account).permit(:user, :seller_id, :aws_key, :secret_key, :stock_border, :cw_api_token, :cw_room_id, :cw_ids)
