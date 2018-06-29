@@ -56,6 +56,13 @@ class ProductsController < ApplicationController
     end
   end
 
+  def report
+    user = current_user.email
+    temp = Product.new
+    temp.fba_check(user)
+    redirect_to products_show_path
+  end
+
   def upload
     if request.post? then
       data = params[:file]
@@ -63,9 +70,8 @@ class ProductsController < ApplicationController
         list = CSV.read(data.path, headers:true)
         temp = Product.where(user:current_user.email)
         list.each do |row|
-          logger.debug(row[0].to_s)
-          temp2 = temp.find_or_create_by(asin:row[0])
-          #temp2.update(asin:row[1], price:row[2])
+          logger.debug("ASIN: " + row[0].to_s + " ,SKU: " + row[1])
+          temp2 = temp.find_or_create_by(asin:row[0], sku:row[1])
         end
       end
     end
@@ -74,7 +80,7 @@ class ProductsController < ApplicationController
 
   private
   def user_params
-     params.require(:account).permit(:user, :seller_id, :aws_key, :secret_key, :cw_api_token, :cw_room_id, :cw_ids)
+     params.require(:account).permit(:user, :seller_id, :aws_key, :secret_key, :stock_border, :cw_api_token, :cw_room_id, :cw_ids)
   end
 
 end

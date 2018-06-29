@@ -15,6 +15,8 @@ Rails.application.routes.draw do
 
   get 'products/check'
 
+  get 'products/report'
+
   delete 'products/delete'
   mount Resque::Server.new, at: "/resque"
 

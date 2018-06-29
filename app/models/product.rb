@@ -1,6 +1,8 @@
 class Product < ApplicationRecord
 
   require 'peddler'
+  require 'date'
+  require 'csv'
 
   def crawl(user)
     #MWSにアクセス
@@ -15,8 +17,9 @@ class Product < ApplicationRecord
     ids = temp.cw_ids
 
     tt = Product.where(user: user)
-
-    asinlist = tt.pluck(:asin)
+    border = tt.stock_border
+    #asinlist = tt.pluck(:asin)
+    asinlist = tt.pluck(:sku)
     client = MWS.products(
       primary_marketplace_id: mp,
       merchant_id: sid,
@@ -31,14 +34,17 @@ class Product < ApplicationRecord
       asins.push(taisn)
       if j == 9 or i == asinlist.length - 1 then
         asins.slice!(j, 9 - asins.length)
-        response = client.get_lowest_offer_listings_for_asin(asins,{item_condition:"New", exclude_me: "false"})
-        response2 = client.get_lowest_offer_listings_for_asin(asins,{item_condition:"New", exclude_me: "true"})
+        response = client.get_lowest_offer_listings_for_sku(asins,{item_condition:"New", exclude_me: "false"})
+        response2 = client.get_lowest_offer_listings_for_sku(asins,{item_condition:"New", exclude_me: "true"})
         parser = response.parse
         parser2 = response2.parse
         uhash = {}
         parser.each do |product|
           asin = product.dig('Product', 'Identifiers', 'MarketplaceASIN', 'ASIN')
-          uhash[asin] = {asin: asin}
+          sku = product.dig('Product', 'Identifiers', 'SKUIdentifier', 'SellerSKU')
+
+          uhash[sku] = {asin: asin, sku:sku}
+
           tprice = 0
           buf = product.dig('Product', 'LowestOfferListings', 'LowestOfferListing')
           buf1 = product.dig('Product', 'LowestOfferListings')
@@ -63,17 +69,19 @@ class Product < ApplicationRecord
               #tnum = buf.dig('NumberOfOfferListingsConsidered').to_i
             end
           end
-          th = uhash[asin]
+          th = uhash[sku]
           if ch1 == false || ch2 == false then
             tnum = 0
           end
+          logger.debug(tprice)
           th[:snum] = tnum
           th[:price] = tprice
-          uhash[asin] = th
+          uhash[sku] = th
         end
 
         parser2.each do |product|
           asin = product.dig('Product', 'Identifiers', 'MarketplaceASIN', 'ASIN')
+          sku = product.dig('Product', 'Identifiers', 'SKUIdentifier', 'SellerSKU')
           buf = product.dig('Product', 'LowestOfferListings', 'LowestOfferListing')
           buf1 = product.dig('Product', 'LowestOfferListings')
           tnum = 0
@@ -94,18 +102,25 @@ class Product < ApplicationRecord
           else
             tnum = 0
           end
-          th = uhash[asin]
+          th = uhash[sku]
           th[:rnum] = tnum
-          uhash[asin] = th
+          uhash[sku] = th
         end
 
         uhash.each do |ss|
-          logger.debug(ss[1])
+          logger.debug('======= Info Start =========')
           t_asin = ss[1][:asin]
+          t_sku = ss[1][:sku]
           t_price = ss[1][:price]
           t_snum = ss[1][:snum]
           t_rnum = ss[1][:rnum]
-          temps = tt.find_by(asin: t_asin)
+          logger.debug(t_asin)
+          logger.debug(t_sku)
+          logger.debug(t_price)
+          logger.debug(t_snum)
+          logger.debug(t_rnum)
+          logger.debug('======= Info END =========')
+          temps = tt.find_by(sku: t_sku)
           if temps == nil then break end
           if t_snum > 0 then
             temps.update(jriden: true)
@@ -125,7 +140,10 @@ class Product < ApplicationRecord
 
           if t_snum > 0 || t_rnum > 0 then
             if temps.checked != true then
-              stask(msg, apitoken,roomid, ids)
+              if temps.fba_stock > border then
+                logger.debug("==== Alert ====")
+                stask(msg, apitoken,roomid, ids)
+              end
             end
           end
         end
@@ -136,6 +154,79 @@ class Product < ApplicationRecord
         j += 1
       end
     end
+  end
+
+  #FBA在庫数の確認
+  def fba_check(user)
+    logger.debug("\n===== Start FBA check =====")
+    mp = "A1VC38T7YXB528"
+    temp = Account.find_by(user: user)
+    sid = temp.seller_id
+    skey = temp.secret_key
+    awskey = temp.aws_key
+    products = Product.where(user:user)
+
+    dt = DateTime.now.gmtime
+    endate = dt.yesterday.beginning_of_day.ago(9.hours).iso8601
+    stdate = dt.yesterday.beginning_of_day.ago(9.hours).iso8601
+
+    report_type = "_GET_FBA_FULFILLMENT_CURRENT_INVENTORY_DATA_"
+    mws_options = {
+      start_date: stdate,
+      end_date: endate
+    }
+    logger.debug(mws_options)
+    client = MWS.reports(
+      primary_marketplace_id: mp,
+      merchant_id: sid,
+      aws_access_key_id: awskey,
+      aws_secret_access_key: skey
+    )
+
+    response = client.request_report(report_type, mws_options)
+    parser = response.parse
+    reqid = parser.dig('ReportRequestInfo', 'ReportRequestId')
+
+    mws_options = {
+      report_request_id_list: reqid,
+    }
+    process = ""
+    logger.debug(reqid)
+    while process != "_DONE_" && process != "_DONE_NO_DATA_"
+      response = client.get_report_request_list(mws_options)
+      parser = response.parse
+      process = parser.dig('ReportRequestInfo', 'ReportProcessingStatus')
+      logger.debug(process)
+      if process == "_DONE_" then
+        genid = parser.dig('ReportRequestInfo', 'GeneratedReportId')
+        break
+      elsif process == "_DONE_NO_DATA_" then
+        genid = "NODATA"
+        break
+      end
+      sleep(30)
+    end
+
+    logger.debug("====== generated id =======")
+    logger.debug(genid)
+
+    if genid.to_s != "NODATA" then
+      response = client.get_report(genid)
+      parser = response.parse
+      logger.debug("====== report data is ok =======\n")
+      parser.each do |row|
+        if row[6] == 'SELLABLE' then
+          tsku = row[2]
+          quantity = row[4]
+          t1 = products.find_by(sku: tsku)
+          if t1 != nil then
+            t1.update(fba_stock: quantity)
+          end
+          logger.debug("SKU: " + tsku + " ,FBA stock: " + quantity.to_s)
+        end
+      end
+    end
+    logger.debug("\n===== End FBA check =====\n")
   end
 
   def msend(message, api_token, room_id)

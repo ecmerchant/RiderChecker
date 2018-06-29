@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20180626160838) do
+ActiveRecord::Schema.define(version: 20180627150205) do
 
   create_table "accounts", force: :cascade do |t|
     t.string   "user"
@@ -22,6 +22,7 @@ ActiveRecord::Schema.define(version: 20180626160838) do
     t.datetime "created_at",   null: false
     t.datetime "updated_at",   null: false
     t.string   "cw_ids"
+    t.integer  "stock_border"
   end
 
   create_table "products", force: :cascade do |t|
@@ -30,11 +31,13 @@ ActiveRecord::Schema.define(version: 20180626160838) do
     t.integer  "seller_num"
     t.integer  "price"
     t.boolean  "riden"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.datetime "created_at",    null: false
+    t.datetime "updated_at",    null: false
     t.string   "user"
     t.boolean  "jriden"
     t.boolean  "checked"
+    t.integer  "fba_stock"
+    t.boolean  "is_cart_price"
   end
 
   create_table "users", force: :cascade do |t|

@@ -27,24 +27,28 @@
       <table class="table table-striped table-hover table-bordered table-headerfixed ellipsis tablesorter" id="result_table">
         <thead class="thead-inverse" style="font-size: 10pt;">
           <tr>
-            <th width="25%">ASIN</th>
-            <th width="20%">価格</th>
-            <th width="20%">他社相乗り？</th>
-            <th width="20%">自社相乗り？</th>
-            <th width="15%">確認済み</th>
+            <th width="15%">ASIN</th>
+            <th width="24%">SKU</th>
+            <th width="10%">価格</th>
+            <th width="13%">FBA在庫数</th>
+            <th width="15%">他社相乗り？</th>
+            <th width="15%">自社相乗り？</th>
+            <th width="8%">確認</th>
           </tr>
         </thead>
         <% if @products != nil then %>
         <% counter = 0 %>
-        <tbody style="font-size: 10pt;">
+        <tbody style="font-size: 9pt;">
           <% for temp in @products %>
           <% if temp.checked == true then checked = 'checked="checked"' else checked = "" end %>
           <tr>
-            <td width="25%"><a href="https://www.amazon.co.jp/dp/<%= temp.asin %>" target="blank"><%= temp.asin %></a></td>
-            <td width="20%"><%= temp.price %></td>
-            <td width="20%"><% if temp.riden == true then %>他社相乗りあり<% else %>問題なし<% end %></td>
-            <td width="20%"><% if temp.jriden == true then %>自社相乗りあり<% else %>問題なし<% end %></td>
-            <td width="15%"><input type="checkbox" name="chk[<%= temp.asin %>]" value="<%= temp.checked %>" <%= checked %> id="chk_<%= temp.asin %>" style="margin-top: 5px;" /></td>
+            <td width="15%"><a href="https://www.amazon.co.jp/dp/<%= temp.asin %>" target="blank"><%= temp.asin %></a></td>
+            <td width="24%"><%= temp.sku %></td>
+            <td width="10%"><%= temp.price %></td>
+            <td width="13%"><%= if temp.fba_stock != nil then temp.fba_stock else 0 end %></td>
+            <td width="15%"><% if temp.riden == true then %>他社相乗りあり<% else %>問題なし<% end %></td>
+            <td width="15%"><% if temp.jriden == true then %>自社相乗りあり<% else %>問題なし<% end %></td>
+            <td width="8%"><input type="checkbox" name="chk[<%= temp.asin %>]" value="<%= temp.checked %>" <%= checked %> id="chk_<%= temp.asin %>" style="margin-top: 5px;" /></td>
           </tr>
           <% end %>
         </tbody>
