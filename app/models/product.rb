@@ -43,7 +43,7 @@ class Product < ApplicationRecord
           asin = product.dig('Product', 'Identifiers', 'MarketplaceASIN', 'ASIN')
           sku = product.dig('Product', 'Identifiers', 'SKUIdentifier', 'SellerSKU')
 
-          uhash[sku] = {asin: asin, sku:sku}
+          uhash[asin] = {asin: asin, sku:sku}
 
           tprice = 0
           buf = product.dig('Product', 'LowestOfferListings', 'LowestOfferListing')
@@ -69,14 +69,14 @@ class Product < ApplicationRecord
               #tnum = buf.dig('NumberOfOfferListingsConsidered').to_i
             end
           end
-          th = uhash[sku]
+          th = uhash[asin]
           if ch1 == false || ch2 == false then
             tnum = 0
           end
           logger.debug(tprice)
           th[:snum] = tnum
           th[:price] = tprice
-          uhash[sku] = th
+          uhash[asin] = th
         end
 
         parser2.each do |product|
@@ -102,9 +102,9 @@ class Product < ApplicationRecord
           else
             tnum = 0
           end
-          th = uhash[sku]
+          th = uhash[asin]
           th[:rnum] = tnum
-          uhash[sku] = th
+          uhash[asin] = th
         end
 
         uhash.each do |ss|
@@ -120,7 +120,8 @@ class Product < ApplicationRecord
           logger.debug(t_snum)
           logger.debug(t_rnum)
           logger.debug('======= Info END =========')
-          temps = tt.find_by(sku: t_sku)
+          #temps = tt.find_by(sku: t_sku)
+          temps = tt.where(asin: t_asin)
           if temps == nil then break end
           if t_snum > 0 then
             temps.update(jriden: true)
