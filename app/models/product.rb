@@ -11,13 +11,15 @@ class Product < ApplicationRecord
     sid = temp.seller_id
     skey = temp.secret_key
     awskey = temp.aws_key
-
+    border = temp.stock_border
     apitoken = temp.cw_api_token
     roomid = temp.cw_room_id
     ids = temp.cw_ids
 
     tt = Product.where(user: user)
-    border = tt.stock_border
+
+    tt.update(jriden: false, riden: false)
+
     #asinlist = tt.pluck(:asin)
     asinlist = tt.pluck(:sku)
     client = MWS.products(
@@ -42,9 +44,6 @@ class Product < ApplicationRecord
         parser.each do |product|
           asin = product.dig('Product', 'Identifiers', 'MarketplaceASIN', 'ASIN')
           sku = product.dig('Product', 'Identifiers', 'SKUIdentifier', 'SellerSKU')
-
-          uhash[asin] = {asin: asin, sku:sku}
-
           tprice = 0
           buf = product.dig('Product', 'LowestOfferListings', 'LowestOfferListing')
           buf1 = product.dig('Product', 'LowestOfferListings')
@@ -66,17 +65,18 @@ class Product < ApplicationRecord
               tprice =  buf[0].dig('Price', 'LandedPrice', 'Amount').to_i
             else
               tprice =  buf.dig('Price', 'LandedPrice', 'Amount').to_i
-              #tnum = buf.dig('NumberOfOfferListingsConsidered').to_i
             end
           end
-          th = uhash[asin]
-          if ch1 == false || ch2 == false then
-            tnum = 0
+          if sku != nil then
+            uhash[sku] = {asin: asin, sku:sku}
+            th = uhash[sku]
+            if ch1 == false || ch2 == false then
+              tnum = 0
+            end
+            th[:snum] = tnum
+            th[:price] = tprice
+            uhash[sku] = th
           end
-          logger.debug(tprice)
-          th[:snum] = tnum
-          th[:price] = tprice
-          uhash[asin] = th
         end
 
         parser2.each do |product|
@@ -102,10 +102,16 @@ class Product < ApplicationRecord
           else
             tnum = 0
           end
-          th = uhash[asin]
-          th[:rnum] = tnum
-          uhash[asin] = th
+          if sku != nil then
+            th = uhash[sku]
+            th[:rnum] = tnum
+            uhash[sku] = th
+          end
         end
+
+        logger.debug('======= HASH =========')
+        logger.debug(uhash)
+        logger.debug('======= HASH END =========')
 
         uhash.each do |ss|
           logger.debug('======= Info Start =========')
@@ -120,8 +126,8 @@ class Product < ApplicationRecord
           logger.debug(t_snum)
           logger.debug(t_rnum)
           logger.debug('======= Info END =========')
-          #temps = tt.find_by(sku: t_sku)
-          temps = tt.where(asin: t_asin)
+          temps = tt.find_by(sku: t_sku)
+          #temps = tt.where(asin: t_asin)
           if temps == nil then break end
           if t_snum > 0 then
             temps.update(jriden: true)
