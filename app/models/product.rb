@@ -147,9 +147,11 @@ class Product < ApplicationRecord
 
           if t_snum > 0 || t_rnum > 0 then
             if temps.checked != true then
-              if temps.fba_stock > border then
-                logger.debug("==== Alert ====")
-                stask(msg, apitoken,roomid, ids)
+              if temps.fba_stock != nil then
+                if temps.fba_stock > border then
+                  logger.debug("==== Alert ====")
+                  stask(msg, apitoken,roomid, ids)
+                end
               end
             end
           end
