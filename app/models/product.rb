@@ -34,8 +34,13 @@ class Product < ApplicationRecord
     j = 0
     asinlist.each do |taisn, i|
       asins.push(taisn)
-      if j == 9 or i == asinlist.length - 1 then
+      if j == 9 || i == asinlist.length - 1 then
         asins.slice!(j, 9 - asins.length)
+        
+        logger.debug('======= ASIN =========')
+        logger.debug(asins)
+        logger.debug('======= ASIN END =========')
+        
         response = client.get_lowest_offer_listings_for_sku(asins,{item_condition:"New", exclude_me: "false"})
         response2 = client.get_lowest_offer_listings_for_sku(asins,{item_condition:"New", exclude_me: "true"})
         parser = response.parse
