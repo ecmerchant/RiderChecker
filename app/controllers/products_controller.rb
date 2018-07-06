@@ -66,7 +66,7 @@ class ProductsController < ApplicationController
     if request.post? then
       data = params[:file]
       if data != nil then
-        list = CSV.read(data.path, {headers:true, encoding:'UTF-8:SJIS'})
+        list = CSV.read(data.path, {headers:true, encoding:'Windows_31J:UTF-8'})
         temp = Product.where(user:current_user.email)
         list.each do |row|
           logger.debug("SKU: " + row[0].to_s + " , ASIN: " + row[1].to_s)
