@@ -66,11 +66,11 @@ class ProductsController < ApplicationController
     if request.post? then
       data = params[:file]
       if data != nil then
-        list = CSV.read(data.path, headers:true)
+        list = CSV.read(data.path, {headers:true, encoding:'UTF-8:SJIS'})
         temp = Product.where(user:current_user.email)
         list.each do |row|
-          logger.debug("ASIN: " + row[0].to_s + " ,SKU: " + row[1])
-          temp2 = temp.find_or_create_by(asin:row[0], sku:row[1])
+          logger.debug("SKU: " + row[0].to_s + " , ASIN: " + row[1].to_s)
+          temp2 = temp.find_or_create_by(asin:row[1].to_s, sku:row[0].to_s)
         end
       end
     end
