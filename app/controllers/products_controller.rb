@@ -39,7 +39,7 @@ class ProductsController < ApplicationController
     if tag != nil then
       products = Product.where(user:current_user.email)
       tag.each do |tasin|
-        tm = products.find_by(asin: tasin)
+        tm = products.where(asin: tasin)
         if tm != nil then
           tm.update(checked: true)
         end
