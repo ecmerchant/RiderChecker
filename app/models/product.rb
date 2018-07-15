@@ -145,13 +145,32 @@ class Product < ApplicationRecord
             temps.update(price: t_price)
           end
 
+          #通知の条件
+          #1. 相乗りがあり
+          #2. チェックがなし
+
           if t_snum > 0 || t_rnum > 0 then
             if temps.checked != true then
-              if temps.fba_stock != nil then
-                if temps.fba_stock > border then
-                  logger.debug("==== Alert ====")
-                  stask(msg, apitoken,roomid, ids)
+              if t_snum > 0 then
+                #   自社相乗り
+                #3. FBA在庫があり(0でない)
+                #4. ボーダーより多い
+                if temps.fba_stock != nil then
+                  if temps.fba_stock > border then
+                    logger.debug("==== Alert ====")
+                    stask(msg, apitoken,roomid, ids)
+
+                    #通知後にチェック
+                    t_asin = temps.asin
+                    ttt = tt.where(asin: t_asin)
+                    ttt.update(checked: true)
+
+                  end
                 end
+              else
+                #   他社相乗り
+                #無条件
+                stask(msg, apitoken,roomid, ids)
               end
             end
           end
