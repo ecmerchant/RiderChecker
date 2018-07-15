@@ -38,9 +38,11 @@
         </thead>
         <% if @products != nil then %>
         <% counter = 0 %>
+        <% ahash = Hash.new %>
         <tbody style="font-size: 9pt;">
           <% for temp in @products %>
           <% if temp.checked == true then checked = 'checked="checked"' else checked = "" end %>
+          <% if ahash.has_key?(temp.asin) == false then ahash[temp.asin] = 1 %>
           <tr>
             <td width="15%"><a href="https://www.amazon.co.jp/dp/<%= temp.asin %>" target="blank"><%= temp.asin %></a></td>
             <td width="24%"><%= temp.sku %></td>
@@ -50,6 +52,7 @@
             <td width="15%"><% if temp.jriden == true then %>自社相乗りあり<% else %>問題なし<% end %></td>
             <td width="8%"><input type="checkbox" name="chk[<%= temp.asin %>]" value="<%= temp.checked %>" <%= checked %> id="chk_<%= temp.asin %>" style="margin-top: 5px;" /></td>
           </tr>
+          <% end %>
           <% end %>
         </tbody>
         <% end %>

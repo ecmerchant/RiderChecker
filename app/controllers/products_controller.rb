@@ -17,7 +17,7 @@ class ProductsController < ApplicationController
   def show
     @login_user = current_user
     #temp = Product.find_or_create_by(user:current_user.email)
-    @products = Product.where(user:current_user.email).uniq(:asin)
+    @products = Product.where(user:current_user.email)
   end
 
   def delete
