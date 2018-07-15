@@ -41,6 +41,12 @@
           </div>
         <% end %>
         <br>
+        <%= form_tag('/products/reset', method:'get') do %>
+          <div class="form-group">
+            <%= submit_tag 'チェックのリセット', class:'btn btn-primary' %>
+          </div>
+        <% end %>
+        <br>
         <br>
         <p class="lead">ASINの削除</p>
         <%= link_to 'ASIN全削除', '/products/delete', method: :delete, data: { confirm: '本当に削除してよろしいですか？' }, class:'btn btn-danger' %>

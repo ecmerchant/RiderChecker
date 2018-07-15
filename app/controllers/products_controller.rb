@@ -38,7 +38,9 @@ class ProductsController < ApplicationController
     tag = params[:chk]
     if tag != nil then
       products = Product.where(user:current_user.email)
+      logger.debug(tag)
       tag.each do |tasin|
+        logger.debug(tasin)
         tm = products.where(asin: tasin)
         if tm != nil then
           tm.update(checked: true)
