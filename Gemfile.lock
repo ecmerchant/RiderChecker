@@ -222,6 +222,10 @@ GEM
       rufus-scheduler (~> 3.2)
     retryable (3.0.1)
     ruby-hmac (0.4.0)
+    rubyXL (3.3.29)
+      nokogiri (>= 1.4.4)
+      rubyzip (>= 1.1.6)
+    rubyzip (1.2.1)
     rufus-scheduler (3.4.2)
       et-orbi (~> 1.0)
     sass (3.5.6)
@@ -307,6 +311,7 @@ DEPENDENCIES
   resque
   resque-scheduler
   retryable
+  rubyXL
   sass-rails (~> 5.0)
   spring
   spring-watcher-listen (~> 2.0.0)

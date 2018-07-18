@@ -14,6 +14,7 @@ class Product < ApplicationRecord
     border = temp.stock_border
     apitoken = temp.cw_api_token
     roomid = temp.cw_room_id
+    roomid2 = temp.cw_room_id2
     ids = temp.cw_ids
 
     tt = Product.where(user: user)
@@ -36,11 +37,11 @@ class Product < ApplicationRecord
       asins.push(taisn)
       if j == 9 || i == asinlist.length - 1 then
         asins.slice!(j, 9 - asins.length)
-        
+
         logger.debug('======= ASIN =========')
         logger.debug(asins)
         logger.debug('======= ASIN END =========')
-        
+
         response = client.get_lowest_offer_listings_for_sku(asins,{item_condition:"New", exclude_me: "false"})
         response2 = client.get_lowest_offer_listings_for_sku(asins,{item_condition:"New", exclude_me: "true"})
         parser = response.parse
@@ -175,7 +176,7 @@ class Product < ApplicationRecord
               else
                 #   他社相乗り
                 #無条件
-                stask(msg, apitoken,roomid, ids)
+                stask(msg, apitoken,roomid2, ids)
               end
             end
           end

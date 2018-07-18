@@ -7,6 +7,7 @@ class ProductsController < ApplicationController
   require 'typhoeus'
   require 'date'
   require 'kconv'
+  require 'rubyXL'
 
   before_action :authenticate_user!
 
@@ -68,11 +69,16 @@ class ProductsController < ApplicationController
     if request.post? then
       data = params[:file]
       if data != nil then
-        list = CSV.read(data.path, {headers:true, encoding:'Windows_31J:UTF-8'})
+        workbook = RubyXL::Parser.parse(data.path)
+        worksheet = workbook.first
+        #list = CSV.read(data.path, {headers:true, encoding:'Windows_31J:UTF-8'})
         temp = Product.where(user:current_user.email)
-        list.each do |row|
-          logger.debug("SKU: " + row[0].to_s + " , ASIN: " + row[1].to_s)
-          temp2 = temp.find_or_create_by(asin:row[1].to_s, sku:row[0].to_s)
+        #list.each do |row|
+        worksheet.each_with_index do |row, i|
+          if i != 0 then
+            logger.debug("SKU: " + row[0].to_s + " , ASIN: " + row[1].to_s)
+            temp2 = temp.find_or_create_by(asin:row[1].value.to_s, sku:row[0].value.to_s)
+          end
         end
       end
     end
@@ -87,7 +93,7 @@ class ProductsController < ApplicationController
 
   private
   def user_params
-     params.require(:account).permit(:user, :seller_id, :aws_key, :secret_key, :stock_border, :cw_api_token, :cw_room_id, :cw_ids)
+     params.require(:account).permit(:user, :seller_id, :aws_key, :secret_key, :stock_border, :cw_api_token, :cw_room_id, :cw_room_id2, :cw_ids)
   end
 
 end

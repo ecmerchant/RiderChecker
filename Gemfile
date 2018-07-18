@@ -84,3 +84,6 @@ gem 'amazon-ecs'
 
 # gem for retry
 gem 'retryable'
+
+# gem for excel
+gem 'rubyXL'
