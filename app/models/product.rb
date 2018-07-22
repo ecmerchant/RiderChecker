@@ -6,6 +6,7 @@ class Product < ApplicationRecord
 
   def crawl(user)
     #MWSにアクセス
+    logger.debug('======= CRAWL START =========')
     mp = "A1VC38T7YXB528"
     temp = Account.find_by(user: user)
     sid = temp.seller_id
@@ -16,6 +17,8 @@ class Product < ApplicationRecord
     roomid = temp.cw_room_id
     roomid2 = temp.cw_room_id2
     ids = temp.cw_ids
+
+    logger.debug('======= VALUE SET =========')
 
     tt = Product.where(user: user)
 
@@ -31,11 +34,15 @@ class Product < ApplicationRecord
     )
 
     asins = []
-
+    logger.debug('======= VALUE SET END =========')
     j = 0
-    asinlist.each do |taisn, i|
+
+    logger.debug(asinlist)
+    i = 0
+    asinlist.each do |taisn|
+      logger.debug(i)
       asins.push(taisn)
-      if j == 9 || i == asinlist.length - 1 then
+      if j == 9 || i == asinlist.length-1 then
         asins.slice!(j, 9 - asins.length)
 
         logger.debug('======= ASIN =========')
@@ -93,6 +100,7 @@ class Product < ApplicationRecord
           tnum = 0
           if buf1 != nil then
             #出品アリ
+
             if buf.class == Array then
               #複数出品
               buf.each do |ttt|
@@ -136,13 +144,15 @@ class Product < ApplicationRecord
           #temps = tt.where(asin: t_asin)
           if temps == nil then break end
           if t_snum > 0 then
+            logger.debug('======= 自社相乗り =========')
             temps.update(jriden: true)
             msg = "注意!: 自社相乗り \n" + "ASIN: " + t_asin + "\n" + "URL: https://www.amazon.co.jp/dp/" + t_asin
           else
             temps.update(jriden: false)
           end
           if t_rnum > 0 then
-            temps.update(riden: true)
+            logger.debug('======= 他社相乗り =========')
+            temps.update(riden: true, jriden: false)
             msg = "【警告!!】: 他社相乗り \n" + "ASIN: " + t_asin + "\n" + "URL: https://www.amazon.co.jp/dp/" + t_asin
           else
             temps.update(riden: false)
@@ -157,7 +167,10 @@ class Product < ApplicationRecord
 
           if t_snum > 0 || t_rnum > 0 then
             if temps.checked != true then
-              if t_snum > 0 then
+              logger.debug(t_snum)
+              logger.debug(t_rnum)
+              if t_snum > 0 && t_rnum == 0 then
+                logger.debug('======= 相乗りあり! =========')
                 #   自社相乗り
                 #3. FBA在庫があり(0でない)
                 #4. ボーダーより多い
@@ -176,6 +189,7 @@ class Product < ApplicationRecord
               else
                 #   他社相乗り
                 #無条件
+                logger.debug('======= 相乗りあり　他社相乗り =========')
                 stask(msg, apitoken,roomid2, ids)
               end
             end
@@ -187,6 +201,7 @@ class Product < ApplicationRecord
       else
         j += 1
       end
+      i += 1
     end
   end
 
